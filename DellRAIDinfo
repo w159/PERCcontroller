@@ -1,0 +1,55 @@
+param(
+    [Parameter(Mandatory=$True,Position=0)]
+    [array]$controllers
+)
+$report = @()
+foreach ($controller in $controllers)
+{
+    $storage = omreport storage pdisk controller=$controller
+    foreach ($line in $storage)
+    {
+        # ID
+        if(($line) -like "ID*")
+        {
+            $disk = New-Object System.Object
+            $line = $line.split(":")[1..3].Replace(" ","")
+            $line = $line[0],$line[1],$line[2] -join ":"
+            $disk | Add-Member -MemberType NoteProperty -Name Controller -Value $controller
+            $disk | Add-Member -MemberType NoteProperty -Name ID -Value $line
+        }
+        # Status
+        if(($line) -like "Status*")
+        {
+            $line = $line.Split(":")[1].Replace(" ","")
+            $disk | Add-Member -MemberType NoteProperty -Name Status -Value $line
+        }
+        # State
+        if(($line) -like "State*")
+        {
+            $line = $line.Split(":")[1].Replace(" ","")
+            $disk | Add-Member -MemberType NoteProperty -Name State -Value $line
+        }
+        # Part
+        if(($line) -like "ProductID*")
+        {
+            $line = $line.Split(":")[1].Replace(" ","")
+            $disk | Add-Member -MemberType NoteProperty -Name PartNumber -Value $line
+        }
+        # Serial
+        if(($line) -like "Serial*")
+        {
+            $line = $line.Split(":")[1].Replace(" ","")
+            $disk | Add-Member -MemberType NoteProperty -Name Serial -Value $line
+        }
+        # Capacity
+        if(($line) -like "Capacity*")
+        {
+            $line = $line.Split(":")[1]
+            $line = $line.Split("GB")[0].Replace(" ","")
+            $disk | Add-Member -MemberType NoteProperty -Name Capacity -Value $line
+            $report += $disk
+        }
+
+    }
+}
+$report
